@@ -1,0 +1,200 @@
+﻿az account set --subscription subscription_number
+az aks get-credentials --resource-group Rsg --name Akscluster
+
+
+helm repo add falcosecurity https://falcosecurity.github.io/charts
+
+
+testserver ~/.kube
+$ helm repo add falcosecurity https://falcosecurity.github.io/charts
+"falcosecurity" has been added to your repositories
+
+testserver ~/.kube
+$ helm repo list
+NAME            URL
+falcosecurity   https://falcosecurity.github.io/charts
+
+
+
+helm repo update
+
+$ helm repo update
+Hang tight while we grab the latest from your chart repositories...
+...Successfully got an update from the "falcosecurity" chart repository
+Update Complete. ⎈ Happy Helming!⎈
+
+testserver ~/.kube
+
+$ kubectl create namespace falco
+namespace/falco created
+
+
+
+testserver ~/.kube
+$ helm install falco -n falco --set falco.grpc.enabled=true --set falco.grpcOutput.enabled=true falcosecurity/falco
+NAME: falco
+LAST DEPLOYED: Mon Nov  9 14:20:55 2020
+NAMESPACE: falco
+STATUS: deployed
+REVISION: 1
+TEST SUITE: None
+NOTES:
+Falco agents are spinning up on each node in your cluster. After a few
+seconds, they are going to start monitoring your containers looking for
+security issues.
+No further action should be required.
+
+testserver ~/.kube
+$ kubectl get namespaces
+NAME                 STATUS   AGE
+appconsolurlistio    Active   40d
+argocd               Active   23d
+default              Active   95d
+ingress-controller   Active   95d
+istio-system         Active   41d
+kube-node-lease      Active   95d
+kube-public          Active   95d
+kube-system          Active   95d
+rbac-manager         Active   95d
+velero               Active   95d
+falco                Active   103m    
+
+testserver ~/.kube
+
+$ kubectl get pod -n falco
+NAME          READY   STATUS    RESTARTS   AGE
+falco-nn47c   1/1     Running   0          2m20s
+falco-q2clm   1/1     Running   0          2m20s
+falco-rqf6r   1/1     Running   0          2m20s
+
+
+
+$ helm install falco-exporter -n falco falcosecurity/falco-exporter
+NAME: falco-exporter
+LAST DEPLOYED: Mon Nov  9 17:42:58 2020
+NAMESPACE: falco
+STATUS: deployed
+REVISION: 1
+NOTES:
+Get the falco-exporter metrics URL by running these commands:
+  export POD_NAME=$(kubectl get pods --namespace falco -l "app.kubernetes.io/name=falco-exporter,app.kubernetes.io/instance=falco-exporter" -o jsonpath="{.items[0].metadata.name}")
+  echo "Visit http://127.0.0.1:9376/metrics to use your application"
+  kubectl port-forward --namespace falco $POD_NAME 9376
+
+
+
+
+Uninstall falco
+
+$ helm uninstall falco -n falco
+release "falco" uninstalled
+kubectl create namespace falco
+
+WeEu-S03-Tst-Aks-Aksc-99
+
+
+testserver ~
+$ kubectl get pod -n falco
+NAME          READY   STATUS    RESTARTS   AGE
+falco-4x7rz   1/1     Running   0          19m
+falco-cgkfs   1/1     Running   0          19m
+falco-vkqzb   1/1     Running   0          19m
+
+
+
+$ kubectl exec -it falco-4x7rz ls -n falco
+kubectl exec [POD] [COMMAND] is DEPRECATED and will be removed in a future version. Use kubectl kubectl exec [POD] -- [COMMAND] instead.
+Unable to use a TTY - input is not a terminal or the right kind of file
+bin
+boot
+dev
+docker-entrypoint.sh
+etc
+home
+host
+lib
+lib32
+lib64
+media
+mnt
+opt
+proc
+root
+run
+sbin
+srv
+sys
+tmp
+usr
+var
+
+$ kubectl exec -it falco-4x7rz cat etc/shadow  -n falco
+kubectl exec [POD] [COMMAND] is DEPRECATED and will be removed in a future version. Use kubectl kubectl exec [POD] -- [COMMAND] instead.
+Unable to use a TTY - input is not a terminal or the right kind of file
+root:*:18513:0:99999:7:::
+daemon:*:18513:0:99999:7:::
+bin:*:18513:0:99999:7:::
+sys:*:18513:0:99999:7:::
+sync:*:18513:0:99999:7:::
+games:*:18513:0:99999:7:::
+man:*:18513:0:99999:7:::
+lp:*:18513:0:99999:7:::
+mail:*:18513:0:99999:7:::
+news:*:18513:0:99999:7:::
+uucp:*:18513:0:99999:7:::
+proxy:*:18513:0:99999:7:::
+www-data:*:18513:0:99999:7:::
+backup:*:18513:0:99999:7:::
+list:*:18513:0:99999:7:::
+irc:*:18513:0:99999:7:::
+gnats:*:18513:0:99999:7:::
+nobody:*:18513:0:99999:7:::
+_apt:*:18513:0:99999:7:::
+
+
+
+
+
+$ kubectl get pod -n falco
+NAME          READY   STATUS    RESTARTS   AGE
+falco-4x7rz   1/1     Running   0          10s
+falco-cgkfs   1/1     Running   0          10s
+falco-vkqzb   1/1     Running   0          10s
+
+testserver ~
+$ kubectl logs -f falco-4x7rz  -n falco
+* Setting up /usr/src links from host
+* Running falco-driver-loader with: driver=module, compile=yes, download=yes
+* Unloading falco module, if present
+* Trying to dkms install falco module with GCC /usr/bin/gcc
+DIRECTIVE: MAKE="'/tmp/falco-dkms-make'"
+
+Kernel preparation unnecessary for this kernel.  Skipping...
+
+Building module:
+cleaning build area....
+'/tmp/falco-dkms-make'........
+cleaning build area....
+
+DKMS: build completed.
+
+falco.ko:
+Running module version sanity check.
+
+depmod...
+
+DKMS: install completed.
+* falco module installed in dkms, trying to insmod
+* Success: falco module found and loaded in dkms
+Tue Nov 10 10:36:20 2020: Falco version 0.26.1 (driver version 2aa88dcf6243982697811df4c1b484bcbe9488a2)
+Tue Nov 10 10:36:20 2020: Falco initialized with configuration file /etc/falco/falco.yaml
+Tue Nov 10 10:36:20 2020: Loading rules from file /etc/falco/falco_rules.yaml:
+Tue Nov 10 10:36:20 2020: Loading rules from file /etc/falco/falco_rules.local.yaml:
+Tue Nov 10 10:36:22 2020: Starting internal webserver, listening on port 8765
+
+11:09:01.058023281: Warning Sensitive file opened for reading by non-trusted program (user=root user_loginuid=-1 program=cat command=cat etc/shadow file=/etc/shadow parent=<NA> gparent=<NA> ggparent=<NA> gggparent=<NA> container_id=b8e84d5d9d83 image=falcosecurity/falco) k8s.ns=falco k8s.pod=falco-4x7rz container=b8e84d5d9d83 k8s.ns=falco k8s.pod=falco-4x7rz container=b8e84d5d9d83
+
+
+
+
+$ kubectl port-forward falco-4x7rz -n falco 8765:8765
