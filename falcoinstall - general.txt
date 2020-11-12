@@ -84,7 +84,7 @@ Get the falco-exporter metrics URL by running these commands:
 
 
 
-Uninstall falco
+##############################################Uninstall falco#################################################################################################
 
 $ helm uninstall falco -n falco
 release "falco" uninstalled
@@ -198,3 +198,163 @@ Tue Nov 10 10:36:22 2020: Starting internal webserver, listening on port 8765
 
 
 $ kubectl port-forward falco-4x7rz -n falco 8765:8765
+
+
+#######################33 Contariner entrering ################33333
+
+
+
+$ winpty kubectl exec -it falco-jbsx9 bash -n falco
+kubectl exec [POD] [COMMAND] is DEPRECATED and will be removed in a future version. Use kubectl kubectl exec [POD] -- [COMMAND] instead.
+root@falco-jbsx9:/# hostname
+falco-jbsx9
+root@falco-jbsx9:/#
+
+
+
+
+################## Logstash ###########################################################################
+
+
+$ kubectl create namespace logstash
+namespace/logstash created
+
+
+
+$ kubectl get namespace
+NAME                 STATUS   AGE
+appconsolurlistio    Active   41d
+argocd               Active   25d
+default              Active   96d
+falco                Active   40h
+ingress-controller   Active   96d
+istio-system         Active   42d
+kube-node-lease      Active   96d
+kube-public          Active   96d
+kube-system          Active   96d
+logstash             Active   8s
+pritam-test          Active   13h
+rbac-manager         Active   96d
+velero               Active   96d
+
+ 
+
+
+$ helm repo add elastic https://helm.elastic.co
+"elastic" has been added to your repositories
+
+ 
+
+
+
+########### Logtash helm chart values.yml  update ############################## 
+
+logstashConfig: 
+  logstash.yml: |
+    http.host: "0.0.0.0"
+    path.config: /usr/share/logstash/pipeline  
+#   key:
+#   nestedkey: value
+#  log4j2.properties: |
+#    key = value
+#
+# Allows you to add any pipeline files in /usr/share/logstash/pipeline/
+### ***warn*** there is a hardcoded logstash.conf in the image, override it first
+
+logstashPipeline: 
+  logstash.conf: |
+    input {
+       file {
+          path => "/var/log/pods/falco*/*.log"
+            }
+         }
+#     filter {
+#         }    
+        
+#     output {
+#        microsoft-logstash-output-azure-loganalytics {
+#           workspace_id => d4e88b17-b48d-4cf9-91bd-0ee977596500
+#           workspace_key => /Mvi3NX4s6SXnDT4BnqBWE698jJUbE2YkUcf40IrEVvClkPMY/IhxSwf0aD2NKV57QUYNFqg37OQzNbNWKlWBg==
+#           custom_log_table_name => "falcoName"    
+#          } 
+#        }  
+# Extra environment variables to append to this nodeGroup
+# This will be appended to the current 'env:' key. You can use any of the kubernetes env
+# syntax here
+extraEnvs: []
+#  - name: MY_ENVIRONMENT_VAR
+#    value: the_value_goes_here
+
+# Allows you to load environment variables from kubernetes secret or config map
+#envFrom: [] 
+envFrom: 
+# - secretRef:
+#     name: env-secret
+  - configMapRef:
+      name: logstash-configmap
+
+
+######################################################################################
+
+
+ helm install logstash . -n logging
+$  helm upgrade logstash . -n logging
+Release "logstash" has been upgraded. Happy Helming!
+NAME: logstash
+LAST DEPLOYED: Thu Nov 12 19:19:59 2020
+NAMESPACE: logging
+STATUS: deployed
+REVISION: 6
+TEST SUITE: None
+NOTES:
+1. Watch all cluster members come up.
+  $ kubectl get pods --namespace=logging -l app=logstash-logstash -w
+
+
+
+$ kubectl logs -f logstash-logstash-0 -n logging
+Using bundled JDK: /usr/share/logstash/jdk
+OpenJDK 64-Bit Server VM warning: Option UseConcMarkSweepGC was deprecated in version 9.0 and will likely be removed in a future release.
+Sending Logstash logs to /usr/share/logstash/logs which is now configured via log4j2.properties
+[2020-11-12T18:20:38,244][INFO ][logstash.runner          ] Starting Logstash {"logstash.version"=>"8.0.0", "jruby.version"=>"jruby 9.2.13.0 (2.5.7) 2020-08-03 9a89c94bcc OpenJDK 64-Bit Server VM 11.0.8+10 on 11.0.8+10 +indy +jit [linux-x86_64]"}
+[2020-11-12T18:20:38,328][INFO ][logstash.setting.writabledirectory] Creating directory {:setting=>"path.queue", :path=>"/usr/share/logstash/data/queue"}
+[2020-11-12T18:20:38,335][INFO ][logstash.setting.writabledirectory] Creating directory {:setting=>"path.dead_letter_queue", :path=>"/usr/share/logstash/data/dead_letter_queue"}
+[2020-11-12T18:20:39,016][WARN ][logstash.config.source.multilocal] Ignoring the 'pipelines.yml' file because modules or command line options are specified
+[2020-11-12T18:20:39,033][INFO ][logstash.agent           ] No persistent UUID file found. Generating new UUID {:uuid=>"b247d124-0db3-4b23-a51b-83c20f81ec74", :path=>"/usr/share/logstash/data/uuid"}
+[2020-11-12T18:20:40,823][INFO ][org.reflections.Reflections] Reflections took 57 ms to scan 1 urls, producing 23 keys and 47 values
+[2020-11-12T18:20:41,520][INFO ][logstash.javapipeline    ][main] Starting pipeline {:pipeline_id=>"main", "pipeline.workers"=>1, "pipeline.batch.size"=>125, "pipeline.batch.delay"=>50, "pipeline.max_inflight"=>125, "pipeline.sources"=>["/usr/share/logstash/pipeline/logstash.conf"], :thread=>"#<Thread:0x69ba996e run>"}
+[2020-11-12T18:20:41,531][INFO ][logstash.javapipeline    ][main] Pipeline Java execution initialization time {"seconds"=>0.01}
+[2020-11-12T18:20:41,847][INFO ][logstash.inputs.file     ][main] No sincedb_path set, generating one based on the "path" setting {:sincedb_path=>"/usr/share/logstash/data/plugins/inputs/file/.sincedb_c6846d283e195bbeaf8d4aeeee83f97e", :path=>["/var/log/pods/falco*/sirene_update/*.log"]}
+[2020-11-12T18:20:41,918][INFO ][logstash.javapipeline    ][main] Pipeline started {"pipeline.id"=>"main"}
+[2020-11-12T18:20:42,016][INFO ][filewatch.observingtail  ][main][fd940b8756e048de9dec0d7edd0767400914b644a3629ceeb17316e2ace69562] START, creating Discoverer, Watch with file and sincedb collections
+[2020-11-12T18:20:42,031][INFO ][logstash.agent           ] Pipelines running {:count=>1, :running_pipelines=>[:main], :non_running_pipelines=>[]}
+[2020-11-12T18:20:42,419][INFO ][logstash.agent           ] Successfully started Logstash API endpoint {:port=>9600}
+
+
+
+
+
+
+helm install falco -n falco \
+  --set falco.grpc.enabled=true \
+  --set falco.grpcOutput.enabled=true \
+  --set falco.syslogOutput.enabled=true \
+  --set falco.fileOutput.keepAlive=true \
+  --set falco.fileOutput.enabled=true \
+   --set falco.fileOutput.filename="/var/run/falco/falcolog" \
+  --set falco.stdoutOutput.enabled=true \
+  --set falco.jsonOutput=true \
+  falcosecurity/falco
+  
+  
+  
+  
+helm install falco -n falco \
+  --set falco.grpc.enabled=true \
+  --set falco.grpcOutput.enabled=true \
+  --set falco.syslogOutput.enabled=true \
+  --set falco.fileOutput.keepAlive=true \
+  --set falco.fileOutput.enabled=true \
+  --set falco.stdoutOutput.enabled=true \
+  --set falco.jsonOutput=true \
+  falcosecurity/falco
