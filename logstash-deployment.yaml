@@ -1,0 +1,26 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: logstash-configmap
+  namespace: logstash
+data:
+  logstash.yml: |
+    http.host: "0.0.0.0"
+    path.config: /usr/share/logstash/pipeline
+  logstash.conf: |
+    input {
+      syslog {
+        port => 12345
+        syslog_field => "syslog"
+    }
+	
+	}
+    filter {
+    }
+    output {
+        microsoft-logstash-output-azure-loganalytics {
+           workspace_id => d4e88b17-b48d-4cf9-91bd-0ee977596500
+           workspace_key => /Mvi3NX4s6SXnDT4BnqBWE698jJUbE2YkUcf40IrEVvClkPMY/IhxSwf0aD2NKV57QUYNFqg37OQzNbNWKlWBg==
+           custom_log_table_name => "falcoName"    
+       }
+    }
