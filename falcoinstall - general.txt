@@ -238,7 +238,7 @@ rbac-manager         Active   96d
 velero               Active   96d
 
  
-
+$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$%%%%%%%%%% This log stach not required $$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$
 
 $ helm repo add elastic https://helm.elastic.co
 "elastic" has been added to your repositories
@@ -294,7 +294,7 @@ envFrom:
       name: logstash-configmap
 
 
-######################################################################################
+####################################################################################
 
 
  helm install logstash . -n logging
@@ -334,6 +334,22 @@ Sending Logstash logs to /usr/share/logstash/logs which is now configured via lo
 
 
 
+############################################### Log stash correct repo #################################################################
+
+
+https://github.com/helm/charts/tree/master/stable/logstash
+
+
+
+
+
+
+
+###################################################################################################################################
+
+
+
+
 
 helm install falco -n falco \
   --set falco.grpc.enabled=true \
@@ -346,7 +362,9 @@ helm install falco -n falco \
   --set falco.jsonOutput=true \
   falcosecurity/falco
   
-  
+        helm upgrade --install falco --namespace falco \
+      ./${{ parameters['folder'] }}/helmcharts/falco \
+      -f ./${{ parameters['folder'] }}/helmcharts/falco/values.yaml
   
   
 helm install falco -n falco \
@@ -358,3 +376,11 @@ helm install falco -n falco \
   --set falco.stdoutOutput.enabled=true \
   --set falco.jsonOutput=true \
   falcosecurity/falco
+  
+  
+  
+helm install falco . -n falco
+  winpty kubectl exec -it falco-5l2xr bash -n falco
+
+
+helm upgrade logstash . -n logging
