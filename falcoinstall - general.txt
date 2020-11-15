@@ -339,6 +339,8 @@ Sending Logstash logs to /usr/share/logstash/logs which is now configured via lo
 
 https://github.com/helm/charts/tree/master/stable/logstash
 
+$ helm repo remove elastic 
+"elastic" has been removed from your repositories
 
 
 
@@ -384,3 +386,151 @@ helm install falco . -n falco
 
 
 helm upgrade logstash . -n logging
+
+
+
+
+
+
+
+
+################################################### Falco To LOGSTASH ################################################################
+Logstash helm chart Value.yml configure 
+
+Logstash Service expose to internal LB grab output from falco send to stdout:-
+
+
+@@@@@@@@@@@@@@ Internal LB IP  10.232.69.251 @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@22
+
+service:
+  type: LoadBalancer
+  loadBalancerIP: 10.232.69.251
+  annotations: 
+    service.beta.kubernetes.io/azure-load-balancer-internal: "true" 
+  ports:
+    http: 
+     port: 8080
+     targetPort: http
+     protocol: TCP
+ports:
+   - name: http
+     containerPort: 8080
+     protocol: TCP
+
+inputs:
+  main: |-
+    input {
+      http {
+       host => "0.0.0.0" # default: 0.0.0.0
+       port => 8080 # default: 8080
+        }
+    }
+
+filters:
+  # main: |-
+  #   filter {
+  #   }
+
+outputs:
+  main: |-
+    output {
+    
+      stdout { codec => rubydebug }
+      # microsoft-logstash-output-azure-loganalytics {
+      #   workspace_id => d4e88b17-b48d-4cf9-91bd-0ee977596500
+      #   workspace_key => /Mvi3NX4s6SXnDT4BnqBWE698jJUbE2YkUcf40IrEVvClkPMY/IhxSwf0aD2NKV57QUYNFqg37OQzNbNWKlWBg==
+      #   custom_log_table_name => "falcoName"    
+      # }
+
+    }
+
+####################################################################################################################################
+
+Falco Helm chart value.yaml to send output to logstash
+ 
+ httpOutput:
+    enabled: true
+    url: http://10.232.69.251:8080
+
+
+
+#####################################################################################################################################
+https://github.com/helm/charts
+
+TEST by sending value by REST API
+curl -XPUT 'http://10.232.69.251:8080/twitter/tweet/1' -d 'hello'
+
+
+
+$ kubectl get pod -n logging
+NAME         READY   STATUS    RESTARTS   AGE
+logstash-0   1/1     Running   0          47m
+
+
+$ kubectl logs -f logstash-0 -n logging
+2020/11/15 09:27:55 Setting 'queue.max_bytes' from environment.
+2020/11/15 09:27:55 Setting 'path.config' from environment.
+2020/11/15 09:27:55 Setting 'queue.drain' from environment.
+2020/11/15 09:27:55 Setting 'http.port' from environment.
+2020/11/15 09:27:55 Setting 'http.host' from environment.
+2020/11/15 09:27:55 Setting 'path.data' from environment.
+2020/11/15 09:27:55 Setting 'queue.checkpoint.writes' from environment.
+2020/11/15 09:27:55 Setting 'queue.type' from environment.
+2020/11/15 09:27:55 Setting 'config.reload.automatic' from environment.
+OpenJDK 64-Bit Server VM warning: If the number of processors is expected to increase from one, then you should configure the number of parallel GC threads appropriately using -XX:ParallelGCThreads=N
+Sending Logstash logs to /usr/share/logstash/logs which is now configured via log4j2.properties
+[2020-11-15T09:28:07,071][WARN ][logstash.config.source.multilocal] Ignoring the 'pipelines.yml' file because modules or command line options are specified
+[2020-11-15T09:28:07,087][INFO ][logstash.runner          ] Starting Logstash {"logstash.version"=>"7.1.1"}
+[2020-11-15T09:28:12,126][INFO ][logstash.javapipeline    ] Starting pipeline {:pipeline_id=>"main", "pipeline.workers"=>1, "pipeline.batch.size"=>125, "pipeline.batch.delay"=>50, "pipeline.max_inflight"=>125, :thread=>"#<Thread:0x4872d64b run>"}
+[2020-11-15T09:28:12,440][INFO ][logstash.javapipeline    ] Pipeline started {"pipeline.id"=>"main"}
+[2020-11-15T09:28:12,469][INFO ][logstash.inputs.http     ] Starting http input listener {:address=>"0.0.0.0:8080", :ssl=>"false"}
+[2020-11-15T09:28:12,599][INFO ][logstash.agent           ] Pipelines running {:count=>1, :running_pipelines=>[:main], :non_running_pipelines=>[]}
+[2020-11-15T09:28:12,871][INFO ][logstash.agent           ] Successfully started Logstash API endpoint {:port=>9600}
+/usr/share/logstash/vendor/bundle/jruby/2.5.0/gems/awesome_print-1.7.0/lib/awesome_print/formatters/base_formatter.rb:31: warning: constant ::Fixnum is deprecated
+{
+      "@version" => "1",
+    "@timestamp" => 2020-11-15T09:29:50.545Z,
+          "host" => "10.232.69.228",
+       "headers" => {
+         "content_length" => "5",
+              "http_host" => "10.232.69.251:8080",
+           "request_path" => "/twitter/tweet/1",
+           "http_version" => "HTTP/1.1",
+        "http_user_agent" => "curl/7.73.0",
+            "http_accept" => "*/*",
+           "content_type" => "application/x-www-form-urlencoded",
+         "request_method" => "PUT"
+    },
+       "message" => "hello"
+}
+{
+           "output" => "10:01:57.131417000: Notice Privileged container started (user=<NA> user_loginuid=0 command=container:2f9ee7d74eae k8s.ns=kube-system k8s.pod=calico-node-9sdzq container=2f9ee7d74eae image=mcr.microsoft.com/oss/calico/node:v3.8.0) k8s.ns=kube-system k8s.pod=calico-node-9sdzq container=2f9ee7d74eae",
+         "priority" => "Notice",
+         "@version" => "1",
+             "time" => "2020-11-15T10:01:57.131417000Z",
+       "@timestamp" => 2020-11-15T10:02:01.252Z,
+             "host" => "10.232.69.231",
+    "output_fields" => {
+               "container.image.tag" => "v3.8.0",
+                      "proc.cmdline" => "container:2f9ee7d74eae",
+                     "user.loginuid" => 0,
+                      "container.id" => "2f9ee7d74eae",
+                          "evt.time" => 1605434517131417000,
+                         "user.name" => nil,
+        "container.image.repository" => "mcr.microsoft.com/oss/calico/node",
+                       "k8s.ns.name" => "kube-system",
+                      "k8s.pod.name" => "calico-node-9sdzq"
+    },
+          "headers" => {
+         "content_length" => "722",
+              "http_host" => "10.232.69.251:8080",
+           "request_path" => "/",
+           "http_version" => "HTTP/1.1",
+        "http_user_agent" => nil,
+            "http_accept" => "*/*",
+           "content_type" => "application/json",
+         "request_method" => "POST"
+    },
+             "rule" => "Launch Privileged Container"
+}
+
