@@ -395,13 +395,9 @@ helm upgrade logstash . -n logging
 
 
 ################################################### Falco To LOGSTASH ################################################################
-Logstash helm chart Value.yml configure 
-
+Logstash helm chart Value.yml configure:- 
 Logstash Service expose to internal LB grab output from falco send to stdout:-
-
-
 @@@@@@@@@@@@@@ Internal LB IP  10.232.69.251 @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@22
-
 service:
   type: LoadBalancer
   loadBalancerIP: 10.232.69.251
@@ -539,4 +535,128 @@ Sending Logstash logs to /usr/share/logstash/logs which is now configured via lo
     },
              "rule" => "Launch Privileged Container"
 }
+
+
+
+$kubectl exec logstash-0  bin/logstash-plugin list  -n logging  > logtashplugin.txt
+logstash-codec-avro
+logstash-codec-cef
+logstash-codec-collectd
+logstash-codec-dots
+logstash-codec-edn
+logstash-codec-edn_lines
+logstash-codec-es_bulk
+logstash-codec-fluent
+logstash-codec-graphite
+logstash-codec-json
+logstash-codec-json_lines
+logstash-codec-line
+logstash-codec-msgpack
+logstash-codec-multiline
+logstash-codec-netflow
+logstash-codec-plain
+logstash-codec-rubydebug
+logstash-filter-aggregate
+logstash-filter-anonymize
+logstash-filter-cidr
+logstash-filter-clone
+logstash-filter-csv
+logstash-filter-date
+logstash-filter-de_dot
+logstash-filter-dissect
+logstash-filter-dns
+logstash-filter-drop
+logstash-filter-elasticsearch
+logstash-filter-fingerprint
+logstash-filter-geoip
+logstash-filter-grok
+logstash-filter-http
+logstash-filter-jdbc_static
+logstash-filter-jdbc_streaming
+logstash-filter-json
+logstash-filter-kv
+logstash-filter-memcached
+logstash-filter-metrics
+logstash-filter-mutate
+logstash-filter-prune
+logstash-filter-ruby
+logstash-filter-sleep
+logstash-filter-split
+logstash-filter-syslog_pri
+logstash-filter-throttle
+logstash-filter-translate
+logstash-filter-truncate
+logstash-filter-urldecode
+logstash-filter-useragent
+logstash-filter-uuid
+logstash-filter-xml
+logstash-input-azure_event_hubs
+logstash-input-beats
+logstash-input-couchdb_changes
+logstash-input-dead_letter_queue
+logstash-input-elasticsearch
+logstash-input-exec
+logstash-input-file
+logstash-input-ganglia
+logstash-input-gelf
+logstash-input-generator
+logstash-input-graphite
+logstash-input-heartbeat
+logstash-input-http
+logstash-input-http_poller
+logstash-input-imap
+logstash-input-jdbc
+logstash-input-kafka
+logstash-input-pipe
+logstash-input-rabbitmq
+logstash-input-redis
+logstash-input-s3
+logstash-input-snmp
+logstash-input-snmptrap
+logstash-input-sqs
+logstash-input-stdin
+logstash-input-syslog
+logstash-input-tcp
+logstash-input-twitter
+logstash-input-udp
+logstash-input-unix
+logstash-output-cloudwatch
+logstash-output-csv
+logstash-output-elastic_app_search
+logstash-output-elasticsearch
+logstash-output-email
+logstash-output-file
+logstash-output-graphite
+logstash-output-http
+logstash-output-kafka
+logstash-output-lumberjack
+logstash-output-nagios
+logstash-output-null
+logstash-output-pipe
+logstash-output-rabbitmq
+logstash-output-redis
+logstash-output-s3
+logstash-output-sns
+logstash-output-sqs
+logstash-output-stdout
+logstash-output-tcp
+logstash-output-udp
+logstash-output-webhdfs
+logstash-patterns-core
+
+
+
+
+$ kubectl exec logstash-0  bin/logstash-plugin install logstash-output-azure_loganalytics -n logging
+kubectl exec [POD] [COMMAND] is DEPRECATED and will be removed in a future version. Use kubectl kubectl exec [POD] -- [COMMAND] instead.
+OpenJDK 64-Bit Server VM warning: If the number of processors is expected to increase from one, then you should configure the number of parallel GC treads appropriately using -XX:ParallelGCThreads=N
+Validating logstash-output-azure_loganalytics
+Installing logstash-output-azure_loganalytics
+Installation successful
+$ kubectl exec logstash-0  bin/logstash-plugin list  -n logging | grep azure
+kubectl exec [POD] [COMMAND] is DEPRECATED and will be removed in a future version. Use kubectl kubectl exec [POD] -- [COMMAND] instead.
+OpenJDK 64-Bit Server VM warning: If the number of processors is expected to increase from one, then you should configure the number of parallel GC threads appropriately using -XX:ParallelGCThreads=N
+logstash-input-azure_event_hubs
+logstash-output-azure_loganalytics
+
 
