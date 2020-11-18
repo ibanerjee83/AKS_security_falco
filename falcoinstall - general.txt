@@ -659,6 +659,7 @@ OpenJDK 64-Bit Server VM warning: If the number of processors is expected to inc
 logstash-input-azure_event_hubs
 logstash-output-azure_loganalytics
 
+kubectl exec logstash-0  bin/logstash-plugin install microsoft-logstash-output-azure-loganalytics
 
 
 
@@ -732,7 +733,7 @@ NAME                   STATUS   VOLUME                                     CAPAC
 data-logstash-0        Bound    pvc-47ad9349-e0aa-4141-90f6-b02672d49b8f   2Gi        RWO            default        3h
 data-logstashfalco-0   Bound    pvc-46729496-3ea1-4488-9440-bc0f547db1c2   2Gi        RWO            default        3h
 
-pnl0bn9v@weeus01pwstep01 MINGW64 ~/Desktop/logtash/logtash
+testserv ~/Desktop/logtash/logtash
 $ kubectl delete pvc -l app=logstash -n logging
 persistentvolumeclaim "data-logstash-0" deleted
 persistentvolumeclaim "data-logstashfalco-0" deleted
@@ -759,4 +760,72 @@ image:
   tag: 7.1.1
   pullPolicy: Always
 
-plugin: "logstash-output-azure_loganalytics"
+plugin: "microsoft-logstash-output-azure-loganalytics"
+
+
+$ kubectl logs -f  logstash-0  -n logging
+OpenJDK 64-Bit Server VM warning: If the number of processors is expected to increase from one, then you should configure the number of parallel GC threads appropriately using -XX:ParallelGCThreads=N
+Installing microsoft-logstash-output-azure-loganalytics
+Installation successful
+2020/11/18 10:41:09 Setting 'path.config' from environment.
+2020/11/18 10:41:09 Setting 'queue.max_bytes' from environment.
+2020/11/18 10:41:09 Setting 'queue.drain' from environment.
+2020/11/18 10:41:09 Setting 'http.port' from environment.
+2020/11/18 10:41:09 Setting 'http.host' from environment.
+2020/11/18 10:41:09 Setting 'path.data' from environment.
+2020/11/18 10:41:09 Setting 'queue.checkpoint.writes' from environment.
+2020/11/18 10:41:09 Setting 'queue.type' from environment.
+2020/11/18 10:41:09 Setting 'config.reload.automatic' from environment.
+OpenJDK 64-Bit Server VM warning: If the number of processors is expected to increase from one, then you should configure the number of parallel GC threads appropriately using -XX:ParallelGCThreads=N
+Sending Logstash logs to /usr/share/logstash/logs which is now configured via log4j2.properties
+[2020-11-18T10:41:21,479][WARN ][logstash.config.source.multilocal] Ignoring the 'pipelines.yml' file because modules or command line options are specified
+[2020-11-18T10:41:21,492][INFO ][logstash.runner          ] Starting Logstash {"logstash.version"=>"7.1.1"}
+[2020-11-18T10:41:27,443][INFO ][logstash.outputs.azureloganalytics] Azure Loganalytics configuration was found valid.
+[2020-11-18T10:41:27,444][INFO ][logstash.outputs.azureloganalytics] Logstash Azure Loganalytics output plugin configuration was found valid
+[2020-11-18T10:41:27,553][INFO ][logstash.javapipeline    ] Starting pipeline {:pipeline_id=>"main", "pipeline.workers"=>1, "pipeline.batch.size"=>125, "pipeline.batch.delay"=>50, "pipeline.max_inflight"=>125, :thread=>"#<Thread:0x69699d24 run>"}
+[2020-11-18T10:41:27,805][INFO ][logstash.javapipeline    ] Pipeline started {"pipeline.id"=>"main"}
+[2020-11-18T10:41:27,825][INFO ][logstash.inputs.http     ] Starting http input listener {:address=>"0.0.0.0:8080", :ssl=>"false"}
+[2020-11-18T10:41:27,885][INFO ][logstash.agent           ] Pipelines running {:count=>1, :running_pipelines=>[:main], :non_running_pipelines=>[]}
+[2020-11-18T10:41:28,217][INFO ][logstash.agent           ] Successfully started Logstash API endpoint {:port=>9600}
+/usr/share/logstash/vendor/bundle/jruby/2.5.0/gems/awesome_print-1.7.0/lib/awesome_print/formatters/base_formatter.rb:31: warning: constant ::Fixnum is deprecated
+{
+           "output" => "Falco internal: syscall event drop. 2 system calls dropped in last second.",
+             "rule" => "Falco internal: syscall event drop",
+          "headers" => {
+           "http_version" => "HTTP/1.1",
+         "content_length" => "317",
+            "http_accept" => "*/*",
+           "request_path" => "/",
+           "content_type" => "application/json",
+         "request_method" => "POST",
+              "http_host" => "logstash.logging:8080",
+        "http_user_agent" => nil
+    },
+             "host" => "172.19.4.73",
+         "@version" => "1",
+         "priority" => "Critical",
+       "@timestamp" => 2020-11-18T10:41:37.369Z,
+    "output_fields" => {
+        "n_drops_buffer" => "2",
+          "ebpf_enabled" => "0",
+               "n_drops" => "2",
+           "n_drops_bug" => "0",
+            "n_drops_pf" => "0",
+                "n_evts" => "25816"
+    },
+             "time" => "2020-11-18T10:41:37.217570175Z"
+}
+[2020-11-18T10:41:37,858][INFO ][logstash.outputs.azureloganalytics] Changing buffer size.[configuration='2000' , new_size='1900']
+[2020-11-18T10:41:39,148][INFO ][logstash.outputs.azureloganalytics] Successfully posted 1 logs into custom log analytics table[falcoName].
+
+
+
+$ az monitor log-analytics workspace table show --resource-group weeu-subs-tnd-rsg-mn-01 --workspace-name Weeu-subs-tnd-La-01 -n "falcoName_CL"
+{
+  "id": "/subscriptions/XXXXXXXXXXXXXXXXXXXXXXX/resourcegroups/weeu-subs-tnd-rsg-mn-01/providers/Microsoft.OperationalInsights/workspaces/weeu-subs-tnd-la-01/tables/falcoName_CL",
+  "name": "falcoName_CL",
+  "resourceGroup": "weeu-subs-tnd-rsg-mn-01",
+  "retentionInDays": null,
+  "type": null
+}
+
