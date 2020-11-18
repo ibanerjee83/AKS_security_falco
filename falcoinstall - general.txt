@@ -660,3 +660,103 @@ logstash-input-azure_event_hubs
 logstash-output-azure_loganalytics
 
 
+
+
+
+
+
+$ kubectl exec logstash-0 -n logging -- printenv | grep SERVICE
+KUBERNETES_SERVICE_HOST=172.20.0.1
+LOGSTASH_SERVICE_PORT=8080
+LOGSTASH_SERVICE_PORT_HTTP=8080
+LOGSTASH_SERVICE_HOST=172.20.39.245
+KUBERNETES_SERVICE_PORT=443
+KUBERNETES_SERVICE_PORT_HTTPS=443
+
+$ kubectl get services kube-dns --namespace=kube-system
+NAME       TYPE        CLUSTER-IP    EXTERNAL-IP   PORT(S)         AGE
+kube-dns   ClusterIP   172.20.0.10   <none>        53/UDP,53/TCP   102d
+
+
+$ kubectl describe svc -n logging
+Name:              logstash
+Namespace:         logging
+Labels:            app=logstash
+                   app.kubernetes.io/managed-by=Helm
+                   chart=logstash-2.4.2
+                   heritage=Helm
+                   release=logstash
+Annotations:       external-dns.alpha.kubernetes.io/hostname: logstash.cluster.local
+                   meta.helm.sh/release-name: logstash
+                   meta.helm.sh/release-namespace: logging
+Selector:          app=logstash,release=logstash
+Type:              ClusterIP
+IP:                172.20.39.245
+Port:              http  8080/TCP
+TargetPort:        http/TCP
+Endpoints:         172.19.3.68:8080
+Session Affinity:  None
+Events:            <none>
+
+
+$ winpty kubectl run curl1 --image=radial/busyboxplus:curl -i --tty
+If you don't see a command prompt, try pressing enter.
+[ root@curl1:/ ]$ nslookup logtash
+Server:    172.20.0.10
+Address 1: 172.20.0.10 kube-dns.kube-system.svc.cluster.local
+
+nslookup: can't resolve 'logtash'
+[ root@curl1:/ ]$ nslookup logstash
+Server:    172.20.0.10
+Address 1: 172.20.0.10 kube-dns.kube-system.svc.cluster.local
+
+nslookup: can't resolve 'logstash'
+[ root@curl1:/ ]$
+
+
+
+
+ grace=$(kubectl get pods logstash-0 -n logging --template '{{.spec.terminationGracePeriodSeconds}}')
+
+
+$ kubectl get statefulset -n logging
+NAME       READY   AGE
+logstash   1/1     73s
+
+
+ kubectl delete  statefulset -n logging -l app=logstash
+ 
+ 
+ $ kubectl get pvc -l app=logstash -n logging
+NAME                   STATUS   VOLUME                                     CAPACITY   ACCESS MODES   STORAGECLASS   AGE
+data-logstash-0        Bound    pvc-47ad9349-e0aa-4141-90f6-b02672d49b8f   2Gi        RWO            default        3h
+data-logstashfalco-0   Bound    pvc-46729496-3ea1-4488-9440-bc0f547db1c2   2Gi        RWO            default        3h
+
+pnl0bn9v@weeus01pwstep01 MINGW64 ~/Desktop/logtash/logtash
+$ kubectl delete pvc -l app=logstash -n logging
+persistentvolumeclaim "data-logstash-0" deleted
+persistentvolumeclaim "data-logstashfalco-0" deleted
+
+
+
+
+###################### LOGSTSH PLUGIN INSTALL by HELM EDIT ######################################################################### 
+statefulset.yaml
+
+
+        ## logstash
+        - name: {{ .Chart.Name }}
+          image: "{{ .Values.image.repository }}:{{ .Values.image.tag }}"
+          imagePullPolicy: {{ .Values.image.pullPolicy }}
+          {{- if .Values.plugin }}
+          command: ["/bin/sh", "-c"]
+          args: ["/usr/share/logstash/bin/logstash-plugin install {{ .Values.plugin }} ; /usr/local/bin/docker-entrypoint"]
+          {{- end }}
+values.yaml
+
+image:
+  repository: docker.elastic.co/logstash/logstash-oss
+  tag: 7.1.1
+  pullPolicy: Always
+
+plugin: "logstash-output-azure_loganalytics"
