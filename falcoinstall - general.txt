@@ -759,8 +759,67 @@ image:
   repository: docker.elastic.co/logstash/logstash-oss
   tag: 7.1.1
   pullPolicy: Always
-
 plugin: "microsoft-logstash-output-azure-loganalytics"
+
+ inputs:
+  main: |-
+    input {
+       http {
+       host => "0.0.0.0" # default: 0.0.0.0
+       port => 8080 # default: 8080
+        }
+    }
+filters:
+  # main: |-
+  #   filter {
+  #   }
+
+outputs:
+  main: |-
+    output {
+    
+      stdout { codec => rubydebug }
+       microsoft-logstash-output-azure-loganalytics {
+          workspace_id => "TTTTTTTTTTTTTTTTTTTTTTTttt"
+          workspace_key => "/MMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMM"
+          custom_log_table_name => "falcoName"    
+       }
+       #azure_loganalytics  {
+       #  workspace_id => "TTTTTTTTTTTTTTTTTTTTTTTttt"
+       #  workspace_key => "/MMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMM"
+       #  custom_log_table_name => "falcoName"    
+       #}
+    }
+
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+
+
 
 
 $ kubectl logs -f  logstash-0  -n logging
